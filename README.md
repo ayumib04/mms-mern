@@ -1,5 +1,65 @@
-MERN Maintenance Management System Architecture
-Project Structure
+# MERN Maintenance Management System
+
+A comprehensive maintenance management system built with MongoDB, Express.js, React.js, and Node.js (MERN stack) for industrial equipment maintenance, inspections, and work order management.
+
+## 📋 Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Database Schema](#database-schema)
+- [API Documentation](#api-documentation)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Security](#security)
+- [Performance Optimizations](#performance-optimizations)
+- [Contributing](#contributing)
+- [License](#license)
+
+## ✨ Features
+
+### Core Functionality
+- **Equipment Management**: Hierarchical equipment tracking with health scoring
+- **Inspection System**: Template-based inspections with multi-step journey
+- **Work Order Management**: Auto-generation based on running hours and conditions
+- **Preventive Maintenance**: Scheduled maintenance tracking and notifications
+- **Analytics Dashboard**: Real-time insights and reporting
+
+### Technical Features
+- **Authentication & Authorization**: JWT-based with role-based access control
+- **Real-time Updates**: WebSocket integration for live notifications
+- **Background Jobs**: Automated scheduling and alerts
+- **Data Export**: CSV and PDF export functionality
+- **File Management**: Document and image upload support
+
+## 🛠 Tech Stack
+
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **JWT** - Authentication
+- **Socket.io** - Real-time communication
+- **Bcrypt** - Password hashing
+
+### Frontend
+- **React.js** - UI library
+- **Redux Toolkit/Zustand** - State management
+- **Axios** - HTTP client
+- **Tailwind CSS** - Styling
+- **Formik + Yup** - Form validation
+- **Socket.io-client** - WebSocket client
+
+### DevOps
+- **Docker** - Containerization
+- **Nginx** - Reverse proxy
+- **PM2** - Process management
+- **Winston** - Logging
+
+## 📁 Project Structure
+
+```
 mms-mern/
 ├── backend/
 │   ├── config/
@@ -32,14 +92,7 @@ mms-mern/
 │   │   ├── notificationService.js
 │   │   └── analyticsService.js
 │   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── userController.js
-│   │   ├── equipmentController.js
-│   │   ├── inspectionController.js
-│   │   ├── backlogController.js
-│   │   ├── workOrderController.js
-│   │   ├── pmController.js
-│   │   └── analyticsController.js
+│   │   └── [controller files]
 │   ├── utils/
 │   │   ├── validators.js
 │   │   └── helpers.js
@@ -61,19 +114,9 @@ mms-mern/
 │   │   │   ├── users/
 │   │   │   └── common/
 │   │   ├── services/
-│   │   │   ├── api.js
-│   │   │   ├── authService.js
-│   │   │   └── websocket.js
 │   │   ├── context/
-│   │   │   ├── AuthContext.js
-│   │   │   └── AppContext.js
 │   │   ├── hooks/
-│   │   │   ├── useAuth.js
-│   │   │   ├── useApi.js
-│   │   │   └── useWebSocket.js
 │   │   ├── utils/
-│   │   │   ├── constants.js
-│   │   │   └── helpers.js
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── public/
@@ -82,53 +125,13 @@ mms-mern/
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
-Key Features to Implement
-1. Authentication & Authorization
+```
 
-JWT-based authentication
-Role-based access control (Administrator, Department Head, Supervisor, Field Technician)
-Session management with refresh tokens
+## 💾 Database Schema
 
-2. Real-time Updates
-
-WebSocket integration for live updates
-Auto work order generation notifications
-Inspection status changes
-Equipment health monitoring alerts
-
-3. Data Persistence
-
-MongoDB schemas with proper relationships
-Data validation and sanitization
-Audit trail for all operations
-Soft deletes for data integrity
-
-4. API Features
-
-RESTful API design
-Pagination, filtering, and sorting
-Bulk operations support
-File upload for documents and images
-Export functionality (CSV, PDF)
-
-5. Background Jobs
-
-Auto work order generation based on running hours
-PM schedule notifications
-Overdue inspection alerts
-Health score calculations
-
-6. Advanced Features
-
-Multi-step inspection journey with draft saving
-Equipment hierarchy management
-Template-based inspections
-Resource tracking with time stamps
-Escalation workflows
-
-Database Schema Design
-Users Collection
-javascript{
+### Users Collection
+```javascript
+{
   _id: ObjectId,
   name: String,
   username: String,
@@ -144,8 +147,11 @@ javascript{
   createdAt: Date,
   updatedAt: Date
 }
-Equipment Collection
-javascript{
+```
+
+### Equipment Collection
+```javascript
+{
   _id: ObjectId,
   code: String,
   name: String,
@@ -178,8 +184,11 @@ javascript{
   createdAt: Date,
   updatedAt: Date
 }
-Inspection Collection
-javascript{
+```
+
+### Inspection Collection
+```javascript
+{
   _id: ObjectId,
   code: String,
   equipmentId: ObjectId,
@@ -221,8 +230,11 @@ javascript{
   createdAt: Date,
   updatedAt: Date
 }
-Work Order Collection
-javascript{
+```
+
+### Work Order Collection
+```javascript
+{
   _id: ObjectId,
   code: String,
   backlogId: ObjectId,
@@ -248,88 +260,210 @@ javascript{
   createdAt: Date,
   updatedAt: Date
 }
-API Endpoints
-Authentication
+```
 
-POST /api/auth/login
-POST /api/auth/logout
-POST /api/auth/refresh
-GET /api/auth/me
+## 📡 API Documentation
 
-Equipment
+### Authentication Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | User login |
+| POST | `/api/auth/logout` | User logout |
+| POST | `/api/auth/refresh` | Refresh JWT token |
+| GET | `/api/auth/me` | Get current user |
 
-GET /api/equipment (with hierarchy support)
-GET /api/equipment/:id
-POST /api/equipment
-PUT /api/equipment/:id
-DELETE /api/equipment/:id
-GET /api/equipment/hierarchy/:parentId
-POST /api/equipment/import
-GET /api/equipment/export
+### Equipment Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/equipment` | Get all equipment (with hierarchy support) |
+| GET | `/api/equipment/:id` | Get specific equipment |
+| POST | `/api/equipment` | Create new equipment |
+| PUT | `/api/equipment/:id` | Update equipment |
+| DELETE | `/api/equipment/:id` | Delete equipment |
+| GET | `/api/equipment/hierarchy/:parentId` | Get equipment hierarchy |
+| POST | `/api/equipment/import` | Bulk import equipment |
+| GET | `/api/equipment/export` | Export equipment data |
 
-Inspections
+### Inspections Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/inspections` | Get all inspections |
+| GET | `/api/inspections/:id` | Get specific inspection |
+| POST | `/api/inspections` | Create new inspection |
+| PUT | `/api/inspections/:id` | Update inspection |
+| POST | `/api/inspections/:id/journey` | Start inspection journey |
+| PUT | `/api/inspections/:id/journey` | Update inspection journey |
+| POST | `/api/inspections/:id/complete` | Complete inspection |
+| GET | `/api/inspections/templates` | Get inspection templates |
+| POST | `/api/inspections/templates` | Create inspection template |
 
-GET /api/inspections
-GET /api/inspections/:id
-POST /api/inspections
-PUT /api/inspections/:id
-POST /api/inspections/:id/journey
-PUT /api/inspections/:id/journey
-POST /api/inspections/:id/complete
-GET /api/inspections/templates
-POST /api/inspections/templates
+### Backlogs Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/backlogs` | Get all backlogs |
+| POST | `/api/backlogs` | Create new backlog |
+| PUT | `/api/backlogs/:id` | Update backlog |
+| POST | `/api/backlogs/bulk-assign` | Bulk assign backlogs |
+| POST | `/api/backlogs/generate-workorders` | Generate work orders from backlogs |
+| DELETE | `/api/backlogs/:id` | Delete backlog |
 
-Backlogs
+### Work Orders Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workorders` | Get all work orders |
+| POST | `/api/workorders` | Create new work order |
+| PUT | `/api/workorders/:id` | Update work order |
+| POST | `/api/workorders/auto-generate` | Auto-generate work orders |
+| GET | `/api/workorders/rules` | Get auto-generation rules |
+| POST | `/api/workorders/rules` | Create auto-generation rule |
 
-GET /api/backlogs
-POST /api/backlogs
-PUT /api/backlogs/:id
-POST /api/backlogs/bulk-assign
-POST /api/backlogs/generate-workorders
-DELETE /api/backlogs/:id
+### Analytics Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/analytics/dashboard` | Get dashboard metrics |
+| GET | `/api/analytics/equipment-health` | Get equipment health analytics |
+| GET | `/api/analytics/maintenance-trends` | Get maintenance trends |
+| GET | `/api/analytics/cost-analysis` | Get cost analysis |
+| GET | `/api/analytics/export` | Export analytics data |
 
-Work Orders
+## 🚀 Installation
 
-GET /api/workorders
-POST /api/workorders
-PUT /api/workorders/:id
-POST /api/workorders/auto-generate
-GET /api/workorders/rules
-POST /api/workorders/rules
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB (v4.4 or higher)
+- Redis (optional, for caching)
+- Docker (optional, for containerization)
 
-Analytics
+### Backend Setup
+```bash
+# Navigate to backend directory
+cd backend
 
-GET /api/analytics/dashboard
-GET /api/analytics/equipment-health
-GET /api/analytics/maintenance-trends
-GET /api/analytics/cost-analysis
-GET /api/analytics/export
+# Install dependencies
+npm install
 
-Implementation Notes
+# Copy environment variables
+cp .env.example .env
 
-State Management: Use Redux Toolkit or Zustand for complex state
-API Client: Axios with interceptors for auth and error handling
-Form Validation: Formik with Yup schemas
-UI Components: Keep existing Tailwind CSS styling
-Testing: Jest for backend, React Testing Library for frontend
-Deployment: Docker containers with nginx reverse proxy
-Monitoring: PM2 for process management, Winston for logging
+# Configure your .env file with appropriate values
 
-Security Considerations
+# Run database migrations/seeds (if applicable)
+npm run migrate
 
-Input validation and sanitization
-Rate limiting on API endpoints
-CORS configuration
-Environment variables for sensitive data
-HTTPS enforcement
-SQL injection prevention with parameterized queries
-XSS protection with proper data encoding
+# Start development server
+npm run dev
+```
 
-Performance Optimizations
+### Frontend Setup
+```bash
+# Navigate to frontend directory
+cd frontend
 
-Database indexing on frequently queried fields
-Redis caching for analytics data
-Lazy loading for equipment hierarchy
-Pagination for large datasets
-Image optimization and CDN integration
-WebSocket connection pooling
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+
+# Start development server
+npm start
+```
+
+### Docker Setup
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Run in detached mode
+docker-compose up -d
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+#### Backend (.env)
+```env
+# Database
+MONGODB_URI=mongodb://localhost:27017/mms-mern
+REDIS_URL=redis://localhost:6379
+
+# Authentication
+JWT_SECRET=your-secret-key
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_EXPIRE=30d
+JWT_REFRESH_EXPIRE=90d
+
+# Server
+PORT=5000
+NODE_ENV=development
+
+# Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-password
+
+# File Upload
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH=./uploads
+```
+
+#### Frontend (.env)
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_WEBSOCKET_URL=http://localhost:5000
+```
+
+## 🔒 Security
+
+### Implemented Security Measures
+- **Input Validation**: All inputs are validated and sanitized
+- **Authentication**: JWT-based with refresh tokens
+- **Authorization**: Role-based access control (RBAC)
+- **Password Security**: Bcrypt hashing with salt rounds
+- **Rate Limiting**: API endpoint protection
+- **CORS**: Properly configured cross-origin requests
+- **HTTPS**: Enforced in production
+- **Environment Variables**: Sensitive data protection
+- **SQL Injection Prevention**: Parameterized queries
+- **XSS Protection**: Proper data encoding
+
+### User Roles
+1. **Administrator**: Full system access
+2. **Department Head**: Department-level management
+3. **Supervisor**: Team management and oversight
+4. **Field Technician**: Equipment inspection and maintenance
+
+## ⚡ Performance Optimizations
+
+- **Database Indexing**: Optimized queries on frequently accessed fields
+- **Caching**: Redis integration for analytics data
+- **Lazy Loading**: Equipment hierarchy and large datasets
+- **Pagination**: Efficient data loading
+- **Image Optimization**: CDN integration for media files
+- **WebSocket Pooling**: Efficient real-time connections
+- **Code Splitting**: Optimized bundle sizes
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Coding Standards
+- Follow ESLint configuration
+- Write unit tests for new features
+- Update documentation as needed
+- Ensure all tests pass before submitting PR
+
+
+## 📞 Support
+
+For support, email ayu.mib04@gmail.com or join our Slack channel.
+
+---
+
+**Note**: This is a comprehensive maintenance management system designed for industrial use. Please ensure proper testing before deploying to production environments.

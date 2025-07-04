@@ -10,8 +10,8 @@ import Dashboard from './components/dashboard/Dashboard';
 import EquipmentRegistry from './components/equipment/EquipmentRegistry';
 import Inspections from './components/inspections/Inspections';
 import Backlogs from './components/backlogs/Backlogs';
-import WorkOrders from './components/workorders/WorkOrders';
-import PreventiveMaintenance from './components/preventivemaintenance/PreventiveMaintenance';
+import WorkOrders from './components/workOrders/WorkOrders';
+import PreventiveMaintenance from './components/preventiveMaintenance/PreventiveMaintenance';
 import Analytics from './components/analytics/Analytics';
 import UserManagement from './components/users/UserManagement';
 import PrivateRoute from './components/auth/PrivateRoute';
@@ -23,9 +23,14 @@ function AppContent() {
 
   useEffect(() => {
     if (user && token) {
-      // Initialize WebSocket connection when user is authenticated
-      const cleanup = initializeWebSocket(token, user.id);
-      return cleanup;
+      try {
+        // Initialize WebSocket connection when user is authenticated
+        const cleanup = initializeWebSocket(token, user.id);
+        return cleanup;
+      } catch (error) {
+        console.error('WebSocket initialization error:', error);
+        // App continues to work even if WebSocket fails
+      }
     }
   }, [user, token]);
 

@@ -2,7 +2,7 @@
 import io from 'socket.io-client';
 
 let socket = null;
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL = process.env.REACT_APP_WEBSOCKET_URL || 'http://localhost:5000';
 
 export const initializeWebSocket = (token, userId) => {
   if (socket) {
@@ -11,7 +11,10 @@ export const initializeWebSocket = (token, userId) => {
 
   socket = io(SOCKET_URL, {
     auth: { token },
-    transports: ['websocket']
+    transports: ['websocket', 'polling'], // Add polling as fallback
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
   });
 
   socket.on('connect', () => {
@@ -25,7 +28,7 @@ export const initializeWebSocket = (token, userId) => {
   });
 
   socket.on('connect_error', (error) => {
-    console.error('WebSocket connection error:', error);
+    console.error('WebSocket connection error:', error.message);
   });
 
   // Return cleanup function

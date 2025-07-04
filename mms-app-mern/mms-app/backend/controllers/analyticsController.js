@@ -214,3 +214,88 @@ exports.getCostAnalysis = async (req, res, next) => {
     next(error);
   }
 };
+
+// Add these functions to the end of your analyticsController.js file
+
+// @desc    Get performance metrics
+// @route   GET /api/analytics/performance
+// @access  Private
+exports.getPerformanceMetrics = async (req, res, next) => {
+  try {
+    // Placeholder implementation
+    const metrics = {
+      overall: {
+        efficiency: 85,
+        availability: 92,
+        reliability: 88
+      },
+      trends: {
+        lastMonth: 83,
+        currentMonth: 85,
+        improvement: 2.4
+      }
+    };
+
+    res.status(200).json({
+      success: true,
+      data: metrics
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get reliability metrics
+// @route   GET /api/analytics/reliability
+// @access  Private
+exports.getReliabilityMetrics = async (req, res, next) => {
+  try {
+    // Placeholder implementation
+    const metrics = {
+      mtbf: 720, // Mean Time Between Failures (hours)
+      mttr: 4,   // Mean Time To Repair (hours)
+      availability: 94.5,
+      failureRate: 0.05
+    };
+
+    res.status(200).json({
+      success: true,
+      data: metrics
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Export analytics data
+// @route   GET /api/analytics/export
+// @access  Private
+exports.exportAnalytics = async (req, res, next) => {
+  try {
+    const { format = 'csv' } = req.query;
+    
+    // Placeholder implementation
+    const data = [
+      { metric: 'Equipment Health', value: 85, unit: '%' },
+      { metric: 'Work Orders Completed', value: 45, unit: 'count' },
+      { metric: 'Average Repair Time', value: 4.2, unit: 'hours' }
+    ];
+
+    if (format === 'csv') {
+      const { Parser } = require('@json2csv/plainjs');
+      const parser = new Parser();
+      const csv = parser.parse(data);
+      
+      res.header('Content-Type', 'text/csv');
+      res.attachment(`analytics_export_${Date.now()}.csv`);
+      return res.send(csv);
+    }
+
+    res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const csv = require('csv-parser');
-const { Parser } = require('json2csv');
+const { Parser } = require('@json2csv/plainjs');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({

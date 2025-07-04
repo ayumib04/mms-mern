@@ -125,7 +125,9 @@ exports.createInspection = async (req, res, next) => {
     const inspection = await Inspection.create(req.body);
 
     // Emit socket event
-    req.io.emit('inspection:created', inspection);
+    if (req.io) {
+      req.io.emit('inspection:created', inspection);
+    }
 
     res.status(201).json({
       success: true,
@@ -172,7 +174,9 @@ exports.updateInspectionJourney = async (req, res, next) => {
     await inspection.save();
 
     // Emit socket event
-    req.io.emit('inspection:updated', inspection);
+    if (req.io) {
+      req.io.emit('inspection:updated', inspection);
+    }
 
     res.status(200).json({
       success: true,
@@ -222,9 +226,11 @@ exports.completeInspection = async (req, res, next) => {
     const backlogs = await inspection.generateBacklogs();
 
     // Emit socket events
-    req.io.emit('inspection:completed', inspection);
-    if (backlogs.length > 0) {
-      req.io.emit('backlogs:created', backlogs);
+    if (req.io) {
+      req.io.emit('inspection:completed', inspection);
+      if (backlogs.length > 0) {
+        req.io.emit('backlogs:created', backlogs);
+      }
     }
 
     res.status(200).json({
@@ -305,164 +311,35 @@ exports.updateTemplate = async (req, res, next) => {
   }
 };
 
-const Inspection = require('../models/Inspection');
-const Equipment = require('../models/Equipment');
-const InspectionTemplate = require('../models/InspectionTemplate');
-
-exports.getAllInspections = async (req, res) => {
+// @desc    Get inspection stats
+// @route   GET /api/inspections/stats
+// @access  Private
+exports.getInspectionStats = async (req, res, next) => {
   try {
-    const { status, type, search } = req.query;
-    let query = {};
-
-    if (status && status !== 'all') query.status = status;
-    if (type && type !== 'all') query.type = type;
-    if (search) {
-      query.$or = [
-        { inspectionId: { $regex: search, $options: 'i' } },
-        { type: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const inspections = await Inspection.find(query)
-      .populate('equipmentId', 'name code')
-      .populate('assignedTo', 'name')
-      .populate('templateId', 'name')
-      .sort({ scheduledDate: -1 });
-
-    // Check for overdue inspections
-    const updatedInspections = inspections.map(inspection => {
-      const isOverdue = new Date(inspection.scheduledDate) < new Date() && 
-                       inspection.status !== 'Completed';
-      return {
-        ...inspection.toObject(),
-        isOverdue
-      };
-    });
-
-    res.json(updatedInspections);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-exports.createInspection = async (req, res) => {
-  try {
-    const inspectionCount = await Inspection.countDocuments();
-    const inspectionId = `INSP-${Date.now()}`;
-
-    const inspection = new Inspection({
-      inspectionId,
-      ...req.body
-    });
-
-    await inspection.save();
-    
-    const populatedInspection = await Inspection.findById(inspection._id)
-      .populate('equipmentId', 'name code')
-      .populate('assignedTo', 'name')
-      .populate('templateId', 'name');
-
-    res.status(201).json(populatedInspection);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-exports.updateInspectionStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      return res.status(404).json({ message: 'Inspection not found' });
-    }
-
-    inspection.status = status;
-    
-    if (status === 'Completed' && !inspection.healthScoreAfter) {
-      const equipment = await Equipment.findById(inspection.equipmentId);
-      // Simple health score calculation based on findings
-      const failedFindings = inspection.findings.filter(f => f.status === 'failed').length;
-      const observationFindings = inspection.findings.filter(f => f.status === 'observation').length;
-      
-      inspection.healthScoreAfter = Math.max(50, 
-        equipment.healthScore - (failedFindings * 10) - (observationFindings * 2)
-      );
-    }
-
-    await inspection.save();
-
-    const populatedInspection = await Inspection.findById(inspection._id)
-      .populate('equipmentId', 'name code')
-      .populate('assignedTo', 'name')
-      .populate('templateId', 'name');
-
-    res.json(populatedInspection);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-exports.updateInspectionJourney = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { journeyData, status, findings, healthScoreAfter, isDraft } = req.body;
-
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      return res.status(404).json({ message: 'Inspection not found' });
-    }
-
-    if (journeyData) inspection.journeyData = journeyData;
-    if (status) inspection.status = status;
-    if (findings) inspection.findings = findings;
-    if (healthScoreAfter !== undefined) inspection.healthScoreAfter = healthScoreAfter;
-    if (isDraft !== undefined) inspection.isDraft = isDraft;
-
-    // Update resource tracking
-    if (req.body.resourceTracking) {
-      inspection.resourceTracking = {
-        ...inspection.resourceTracking,
-        ...req.body.resourceTracking
-      };
-    }
-
-    await inspection.save();
-
-    const populatedInspection = await Inspection.findById(inspection._id)
-      .populate('equipmentId', 'name code')
-      .populate('assignedTo', 'name')
-      .populate('templateId', 'name');
-
-    res.json(populatedInspection);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-exports.getInspectionStats = async (req, res) => {
-  try {
-    const total = await Inspection.countDocuments();
-    const scheduled = await Inspection.countDocuments({ status: 'Scheduled' });
-    const inProgress = await Inspection.countDocuments({ status: 'In Progress' });
-    const completed = await Inspection.countDocuments({ status: 'Completed' });
+    const total = await Inspection.countDocuments({ isDeleted: false });
+    const scheduled = await Inspection.countDocuments({ isDeleted: false, status: 'Scheduled' });
+    const inProgress = await Inspection.countDocuments({ isDeleted: false, status: 'In Progress' });
+    const completed = await Inspection.countDocuments({ isDeleted: false, status: 'Completed' });
     
     // Count overdue
     const now = new Date();
     const overdueInspections = await Inspection.find({
+      isDeleted: false,
       scheduledDate: { $lt: now },
       status: { $ne: 'Completed' }
     });
     
-    res.json({
-      total,
-      scheduled,
-      inProgress,
-      completed,
-      overdue: overdueInspections.length
+    res.status(200).json({
+      success: true,
+      data: {
+        total,
+        scheduled,
+        inProgress,
+        completed,
+        overdue: overdueInspections.length
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };

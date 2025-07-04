@@ -128,7 +128,7 @@ equipmentSchema.virtual('fullPath').get(async function() {
   let current = this;
   
   while (current.parent) {
-    current = await this.model('Equipment').findById(current.parent);
+    current = await mongoose.model('Equipment').findById(current.parent);
     if (current) {
       path.unshift(current.name);
     }
@@ -139,7 +139,8 @@ equipmentSchema.virtual('fullPath').get(async function() {
 
 // Method to update children array
 equipmentSchema.methods.updateChildren = async function() {
-  const children = await this.model('Equipment').find({ parent: this._id, isDeleted: false });
+  const Equipment = mongoose.model('Equipment');
+  const children = await Equipment.find({ parent: this._id, isDeleted: false });
   this.children = children.map(child => child._id);
   await this.save();
 };
@@ -147,12 +148,13 @@ equipmentSchema.methods.updateChildren = async function() {
 // Pre-save middleware to validate hierarchy
 equipmentSchema.pre('save', async function(next) {
   if (this.parent) {
-    const parent = await this.model('Equipment').findById(this.parent);
+    const Equipment = mongoose.model('Equipment');
+    const parent = await Equipment.findById(this.parent);
     if (!parent) {
-      throw new Error('Parent equipment not found');
+      return next(new Error('Parent equipment not found'));
     }
     if (parent.level !== this.level - 1) {
-      throw new Error('Invalid hierarchy level');
+      return next(new Error('Invalid hierarchy level'));
     }
   }
   next();

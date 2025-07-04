@@ -1,7 +1,5 @@
 // backend/scripts/seed.js
 require('dotenv').config();
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const { connectDB } = require('../config/database');
 
 // Import models
@@ -64,8 +62,8 @@ const seedDatabase = async () => {
     // Create equipment hierarchy
     console.log('Creating equipment...');
     
-    // Plant level
-    const plant = await Equipment.create({
+    // Plant level (no parent)
+    const plant = new Equipment({
       code: 'PLANT-001',
       name: 'Main Manufacturing Plant',
       type: 'plant',
@@ -77,66 +75,69 @@ const seedDatabase = async () => {
       healthScore: 95,
       createdBy: users[0]._id
     });
+    await plant.save();
 
-    // Equipment level
-    const equipment = await Equipment.create([
-      {
-        code: 'HVAC-001',
-        name: 'HVAC System - Building A',
-        type: 'equipment',
-        level: 2,
-        parent: plant._id,
-        criticality: 'B',
-        location: 'Building A, Floor 1',
-        status: 'Active',
-        manufacturer: 'Carrier',
-        model: 'XC-5000',
-        serialNumber: 'CAR2023001',
-        runningHours: 1500,
-        nextMaintenanceHours: 2000,
-        healthScore: 92,
-        createdBy: users[0]._id
-      },
-      {
-        code: 'PUMP-001',
-        name: 'Water Circulation Pump 1',
-        type: 'equipment',
-        level: 2,
-        parent: plant._id,
-        criticality: 'A',
-        location: 'Pump Room 1',
-        status: 'Active',
-        manufacturer: 'Grundfos',
-        model: 'CR-64',
-        serialNumber: 'GRF2023001',
-        runningHours: 3200,
-        nextMaintenanceHours: 4000,
-        healthScore: 88,
-        createdBy: users[0]._id
-      },
-      {
-        code: 'COMP-001',
-        name: 'Air Compressor 1',
-        type: 'equipment',
-        level: 2,
-        parent: plant._id,
-        criticality: 'A',
-        location: 'Compressor Room',
-        status: 'Active',
-        manufacturer: 'Atlas Copco',
-        model: 'GA-55',
-        serialNumber: 'AC2023001',
-        runningHours: 2800,
-        nextMaintenanceHours: 3000,
-        healthScore: 85,
-        createdBy: users[0]._id
-      }
-    ]);
+    // Equipment level (with parent)
+    const equipment1 = new Equipment({
+      code: 'HVAC-001',
+      name: 'HVAC System - Building A',
+      type: 'equipment',
+      level: 2,
+      parent: plant._id,
+      criticality: 'B',
+      location: 'Building A, Floor 1',
+      status: 'Active',
+      manufacturer: 'Carrier',
+      model: 'XC-5000',
+      serialNumber: 'CAR2023001',
+      runningHours: 1500,
+      nextMaintenanceHours: 2000,
+      healthScore: 92,
+      createdBy: users[0]._id
+    });
+    await equipment1.save();
+
+    const equipment2 = new Equipment({
+      code: 'PUMP-001',
+      name: 'Water Circulation Pump 1',
+      type: 'equipment',
+      level: 2,
+      parent: plant._id,
+      criticality: 'A',
+      location: 'Pump Room 1',
+      status: 'Active',
+      manufacturer: 'Grundfos',
+      model: 'CR-64',
+      serialNumber: 'GRF2023001',
+      runningHours: 3200,
+      nextMaintenanceHours: 4000,
+      healthScore: 88,
+      createdBy: users[0]._id
+    });
+    await equipment2.save();
+
+    const equipment3 = new Equipment({
+      code: 'COMP-001',
+      name: 'Air Compressor 1',
+      type: 'equipment',
+      level: 2,
+      parent: plant._id,
+      criticality: 'A',
+      location: 'Compressor Room',
+      status: 'Active',
+      manufacturer: 'Atlas Copco',
+      model: 'GA-55',
+      serialNumber: 'AC2023001',
+      runningHours: 2800,
+      nextMaintenanceHours: 3000,
+      healthScore: 85,
+      createdBy: users[0]._id
+    });
+    await equipment3.save();
 
     // Update plant children
-    await Equipment.findByIdAndUpdate(plant._id, {
-      children: equipment.map(e => e._id)
-    });
+    plant.children = [equipment1._id, equipment2._id, equipment3._id];
+    await plant.save();
 
     // Create inspection templates
     console.log('Creating inspection templates...');
@@ -164,58 +165,6 @@ const seedDatabase = async () => {
             mandatory: true,
             unit: '°C',
             normalRange: { min: 20, max: 80 }
-          },
-          {
-            id: 'vibration',
-            name: 'Vibration Level',
-            type: 'measurement',
-            mandatory: false,
-            unit: 'mm/s',
-            normalRange: { min: 0, max: 5 }
-          },
-          {
-            id: 'noise',
-            name: 'Noise Level',
-            type: 'measurement',
-            mandatory: false,
-            unit: 'dB',
-            normalRange: { min: 0, max: 85 }
-          }
-        ],
-        isActive: true,
-        createdBy: users[0]._id
-      },
-      {
-        name: 'Pump Inspection Template',
-        equipmentTypes: ['equipment'],
-        safetyChecks: [
-          'Verify pump isolation',
-          'Check pressure relief valves',
-          'Ensure proper ventilation'
-        ],
-        checkpoints: [
-          {
-            id: 'flow-rate',
-            name: 'Flow Rate',
-            type: 'measurement',
-            mandatory: true,
-            unit: 'm³/h',
-            normalRange: { min: 50, max: 150 }
-          },
-          {
-            id: 'pressure',
-            name: 'Discharge Pressure',
-            type: 'measurement',
-            mandatory: true,
-            unit: 'bar',
-            normalRange: { min: 2, max: 8 }
-          },
-          {
-            id: 'seal-check',
-            name: 'Mechanical Seal Condition',
-            type: 'observation',
-            mandatory: true,
-            parameters: ['No leaks', 'Minor leaks', 'Major leaks']
           }
         ],
         isActive: true,
